@@ -1,67 +1,47 @@
-// Hearth Ledger — the entrypoint that assembles the submission for the
-// grader. Plain words: it gathers the finished site (the static files in
-// app/ — the page, the stylesheet and the JavaScript that renders the
-// eight budget pages) and the screenshots in screenshots/, lays them out
-// in the output directory the grader reads, and writes dossier.json there.
-// The dossier is the judge's summary of the entry — the screenshots, the
-// files the first load fetches and their sizes, and the source itself —
-// produced by buildDossier from the vendored make.fun library in
-// vendor/makefun-frontend.ts. That vendored file must stay byte-for-byte
-// as the kit shipped it: the scorer re-derives the dossier from its own
-// copy of the library and refuses anything that does not match.
+// Hearth Ledger — the hand-in program (Node 22, standard library only).
 //
-// The site has no build step and makes no network requests: a browser just
-// opens app/index.html. Try it locally with `node serve.ts`, then open
-// http://localhost:8080. Outside the grader's container, the output
-// directory is MAKEFUN_OUTPUT_DIR:
-//
-//   mkdir -p out && MAKEFUN_OUTPUT_DIR=out node main.ts
-//
-// The caps below are the scorer's own gates, so this script refuses an
-// entry the scorer would refuse: at most 4 screenshots, none over 256 KiB,
-// at most 993 files and directories inside app/, 16 MiB of app files, and
-// a 160 KiB cap on the text the dossier carries. The output is
-// deterministic: run it twice and dossier.json comes out byte-identical.
+// It gathers the entry — the site under app/ and its screenshots — into the
+// output directory and writes the dossier there with make.fun's own
+// buildDossier, so the dossier is exactly the one the scorer rebuilds.
+// Run twice, it writes the same bytes twice: files are copied in sorted
+// order and the dossier is a pure function of the files.
 
-import { cpSync, existsSync, mkdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { buildDossier } from './vendor/makefun-frontend.ts';
+import { cpSync, existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+import { buildDossier } from "./vendor/makefun-frontend.ts";
 
-// Where this file lives, and where the grader looks for the entry.
-const here = fileURLToPath(new URL('.', import.meta.url));
-const outDir = process.env.MAKEFUN_OUTPUT_DIR ?? '/output';
+const REPO_ROOT = dirname(fileURLToPath(import.meta.url));
 
-// Copy a directory tree, creating the destination first.
-function copyDir(from, to) {
-  mkdirSync(to, { recursive: true });
-  cpSync(from, to, { recursive: true });
+function outputDir(): string {
+  const fromEnv = process.env.MAKEFUN_OUTPUT_DIR;
+  if (fromEnv && fromEnv.trim() !== "") return fromEnv;
+  return "/output";
 }
 
-function assemble() {
-  // Start from an empty output directory, so a file left over from an
-  // earlier run can never sneak into the submission.
-  rmSync(outDir, { recursive: true, force: true });
-  mkdirSync(outDir, { recursive: true });
+function gather(root: string, out: string): void {
+  // Start clean so a stale file from an earlier run can never leak in.
+  rmSync(out, { recursive: true, force: true });
+  mkdirSync(out, { recursive: true });
+  for (const folder of ["app", "screenshots"]) {
+    const src = join(root, folder);
+    if (!existsSync(src)) throw new Error(`Hearth Ledger: missing ${folder}/ in ${root}`);
+    cpSync(src, join(out, folder), { recursive: true });
+  }
+}
 
-  // The site itself, exactly as it ships.
-  copyDir(join(here, 'app'), join(outDir, 'app'));
-
-  // The screenshots, when the folder exists.
-  const shots = join(here, 'screenshots');
-  if (existsSync(shots)) copyDir(shots, join(outDir, 'screenshots'));
-
-  // The judge's summary, written by the vendored library.
-  const dossier = buildDossier(outDir, {
+function main(): void {
+  const out = outputDir();
+  gather(REPO_ROOT, out);
+  const dossier = buildDossier(out, {
     text_max_bytes: 163840,
     screenshots: { max: 4, max_bytes: 262144 },
     app_max_files: 993,
     app_max_bytes: 16777216,
+    app_path_max_bytes: 1000,
   });
-  const dossierPath = join(outDir, 'dossier.json');
-  writeFileSync(dossierPath, dossier);
-  const size = statSync(dossierPath).size;
-  console.log(`wrote ${dossierPath} (${size} bytes)`);
+  writeFileSync(join(out, "dossier.json"), dossier);
+  console.log(`Hearth Ledger: wrote ${out}/dossier.json (${dossier.length} bytes)`);
 }
 
-assemble();
+main();

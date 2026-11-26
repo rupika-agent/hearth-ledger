@@ -1,114 +1,77 @@
-// Hearth Ledger — charts on canvas, no library, no network.
-// A chart only ever draws the numbers it is handed, and it sizes itself to
-// the element on the page, scaling by the device pixel ratio so it stays
-// sharp on retina screens.
+// Hearth Ledger — small SVG charts, drawn from numbers, no libraries.
+// donutChart(parts) takes [{label, value, color}] and returns an SVG string
+// for a ring chart; barsChart(series) takes [{label, value}] and returns a
+// vertical bar chart. Both are pure functions of their inputs.
 
-function prepare(canvas, heightCss) {
-  const dpr = window.devicePixelRatio || 1;
-  const width = canvas.clientWidth;
-  const height = heightCss;
-  canvas.width = Math.max(1, Math.round(width * dpr));
-  canvas.height = Math.round(height * dpr);
-  canvas.style.height = height + 'px';
-  const ctx = canvas.getContext('2d');
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  return { ctx, width, height };
+const TAU = Math.PI * 2;
+
+function polar(cx, cy, r, angle) {
+  return [cx + r * Math.cos(angle), cy + r * Math.sin(angle)];
 }
 
-// Donut: one slice per {label, value, color}, the total in the middle.
-export function drawDonut(canvas, slices, centerLabel, centerValue) {
-  const { ctx, width, height } = prepare(canvas, 220);
-  const cx = width / 2;
-  const cy = height / 2;
-  const outer = Math.min(width, height) / 2 - 12;
-  const inner = outer * 0.62;
-  const total = slices.reduce((s, x) => s + x.value, 0);
-  if (total <= 0) {
-    ctx.fillStyle = '#e5ddd0';
-    ctx.beginPath(); ctx.arc(cx, cy, outer, 0, Math.PI * 2); ctx.fill();
-  } else {
-    let start = -Math.PI / 2;
-    for (const s of slices) {
-      const sweep = (s.value / total) * Math.PI * 2;
-      ctx.fillStyle = s.color;
-      ctx.beginPath();
-      ctx.moveTo(cx, cy);
-      ctx.arc(cx, cy, outer, start, start + sweep);
-      ctx.closePath(); ctx.fill();
-      start += sweep;
-    }
+function arcPath(cx, cy, rOuter, rInner, a0, a1) {
+  const [x0, y0] = polar(cx, cy, rOuter, a0);
+  const [x1, y1] = polar(cx, cy, rOuter, a1);
+  const [x2, y2] = polar(cx, cy, rInner, a1);
+  const [x3, y3] = polar(cx, cy, rInner, a0);
+  const large = a1 - a0 > Math.PI ? 1 : 0;
+  return `M ${x0.toFixed(1)} ${y0.toFixed(1)} A ${rOuter} ${rOuter} 0 ${large} 1 ${x1.toFixed(1)} ${y1.toFixed(1)} L ${x2.toFixed(1)} ${y2.toFixed(1)} A ${rInner} ${rInner} 0 ${large} 0 ${x3.toFixed(1)} ${y3.toFixed(1)} Z`;
+}
+
+export function donutChart(parts) {
+  const total = parts.reduce((s, p) => s + p.value, 0);
+  const cx = 110;
+  const cy = 110;
+  const outer = 96;
+  const inner = 58;
+  let angle = -Math.PI / 2;
+  const slices = [];
+  for (const p of parts) {
+    if (p.value <= 0) continue;
+    const span = (p.value / total) * TAU;
+    const end = angle + span;
+    // Leave a hairline gap between slices so neighbours stay readable.
+    const gap = 0.012;
+    slices.push(
+      `<path d="${arcPath(cx, cy, outer, inner, angle + gap, end - gap)}" fill="${p.color}"><title>${p.label}: $${p.value.toFixed(2)}</title></path>`,
+    );
+    angle = end;
   }
-  ctx.fillStyle = '#fffdf8';
-  ctx.beginPath(); ctx.arc(cx, cy, inner, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = '#6b6257';
-  ctx.font = '12px system-ui, sans-serif';
-  ctx.textAlign = 'center';
-  ctx.fillText(centerLabel, cx, cy - 4);
-  ctx.fillStyle = '#1f2a24';
-  ctx.font = 'bold 20px Georgia, serif';
-  ctx.fillText(centerValue, cx, cy + 20);
+  const legend = parts
+    .map(
+      (p) =>
+        `<li><span class="swatch" style="background:${p.color}"></span>${p.label}<b>$${p.value.toFixed(2)}</b><span class="pct">${((p.value / total) * 100).toFixed(1)}%</span></li>`,
+    )
+    .join("");
+  return `<div class="donut-wrap"><svg viewBox="0 0 220 220" role="img" aria-label="Spending by category, donut chart">${slices.join("")}<text x="110" y="104" text-anchor="middle" class="donut-total">$${total.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</text><text x="110" y="126" text-anchor="middle" class="donut-caption">spent in November</text></svg><ul class="legend">${legend}</ul></div>`;
 }
 
-// Horizontal bars: one row per {label, value, color}, value at the end.
-export function drawBars(canvas, rows, money) {
-  const rowH = 34;
-  const height = rows.length * rowH + 8;
-  const { ctx, width } = prepare(canvas, height);
-  const labelW = 132;
-  const valueW = 76;
-  const barX = labelW + 8;
-  const barW = Math.max(40, width - barX - valueW - 8);
-  const max = Math.max(...rows.map((r) => r.value), 1);
-  ctx.font = '12px system-ui, sans-serif';
-  rows.forEach((row, i) => {
-    const y = 8 + i * rowH;
-    ctx.fillStyle = '#1f2a24';
-    ctx.textAlign = 'left';
-    ctx.fillText(row.label, 0, y + 15);
-    ctx.fillStyle = '#efe9dd';
-    ctx.fillRect(barX, y, barW, 18);
-    ctx.fillStyle = row.color;
-    ctx.fillRect(barX, y, Math.max(2, (row.value / max) * barW), 18);
-    ctx.fillStyle = '#1f2a24';
-    ctx.textAlign = 'right';
-    ctx.fillText(money(row.value), width, y + 15);
+export function barsChart(series) {
+  const width = 640;
+  const height = 260;
+  const padLeft = 56;
+  const padBottom = 30;
+  const padTop = 26;
+  const max = Math.max(...series.map((s) => s.value), 1);
+  const plotW = width - padLeft - 8;
+  const plotH = height - padTop - padBottom;
+  const slot = plotW / series.length;
+  const barW = Math.min(46, slot * 0.6);
+  const bars = series.map((s, i) => {
+    const h = (s.value / max) * plotH;
+    const x = padLeft + i * slot + (slot - barW) / 2;
+    const y = padTop + plotH - h;
+    return `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${barW.toFixed(1)}" height="${h.toFixed(1)}" rx="4" fill="${s.color || "#2e6b4f"}"><title>${s.label}: $${s.value.toFixed(2)}</title></rect><text x="${(x + barW / 2).toFixed(1)}" y="${(padTop + plotH + 18).toFixed(1)}" text-anchor="middle" class="bar-label">${s.label}</text><text x="${(x + barW / 2).toFixed(1)}" y="${(y - 6).toFixed(1)}" text-anchor="middle" class="bar-value">$${Math.round(s.value).toLocaleString("en-US")}</text>`;
   });
+  const grid = [0.25, 0.5, 0.75, 1].map((f) => {
+    const y = padTop + plotH * (1 - f);
+    return `<line x1="${padLeft}" y1="${y.toFixed(1)}" x2="${width - 8}" y2="${y.toFixed(1)}" class="grid-line"/><text x="${padLeft - 8}" y="${(y + 4).toFixed(1)}" text-anchor="end" class="grid-label">$${Math.round(max * f).toLocaleString("en-US")}</text>`;
+  });
+  return `<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Spending by category, bar chart" class="bars-svg">${grid.join("")}${bars.join("")}</svg>`;
 }
 
-// Grouped bars: income beside spending, one pair per month.
-export function drawTrend(canvas, months, income, spent, money) {
-  const height = 230;
-  const { ctx, width } = prepare(canvas, height);
-  const padL = 46;
-  const padB = 28;
-  const padT = 12;
-  const plotW = width - padL - 8;
-  const plotH = height - padT - padB;
-  const max = Math.max(...income, ...spent, 1000);
-  const top = Math.ceil(max / 1000) * 1000;
-  ctx.font = '11px system-ui, sans-serif';
-  ctx.fillStyle = '#8a8073';
-  ctx.textAlign = 'right';
-  for (let g = 0; g <= 4; g++) {
-    const v = (top / 4) * g;
-    const y = padT + plotH - (v / top) * plotH;
-    ctx.strokeStyle = '#e8e1d3';
-    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(width - 8, y); ctx.stroke();
-    ctx.fillText('$' + (v / 1000).toFixed(0) + 'k', padL - 6, y + 4);
-  }
-  const slot = plotW / months.length;
-  const bw = Math.min(26, slot / 3);
-  months.forEach((m, i) => {
-    const x0 = padL + i * slot + slot / 2;
-    const ih = (income[i] / top) * plotH;
-    const sh = (spent[i] / top) * plotH;
-    ctx.fillStyle = '#1f4d3a';
-    ctx.fillRect(x0 - bw - 2, padT + plotH - ih, bw, ih);
-    ctx.fillStyle = '#e8a33d';
-    ctx.fillRect(x0 + 2, padT + plotH - sh, bw, sh);
-    ctx.fillStyle = '#1f2a24';
-    ctx.textAlign = 'center';
-    ctx.fillText(m, x0, height - 8);
-  });
-  void money;
+// A thin horizontal bar used for budget rows and goal progress.
+export function meter(fraction, tone) {
+  const pct = Math.max(0, Math.min(1, fraction)) * 100;
+  return `<div class="meter" role="img" aria-label="${pct.toFixed(0)} percent"><span class="meter-fill ${tone || ""}" style="width:${pct.toFixed(1)}%"></span></div>`;
 }

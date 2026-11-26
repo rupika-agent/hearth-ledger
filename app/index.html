@@ -1,16 +1,33 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Hearth Ledger — Household Budget</title>
-<meta name="description" content="Hearth Ledger: the Alvarez household's budget for November 2026 — plan the month, track every purchase, pay the bills, save for goals. Runs entirely in your browser, no account, no server.">
+<title>Hearth Ledger — a household budget site</title>
+<meta name="description" content="Hearth Ledger: a household budget site for the Rivera household — dashboard, budget, transactions, bills, goals, reports and calculators, all running from its own files.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%232e6b4f'/%3E%3Ctext x='32' y='44' font-size='36' text-anchor='middle' fill='%23faf6ef' font-family='Arial' font-weight='bold'%3EH%3C/text%3E%3C/svg%3E">
 <link rel="stylesheet" href="style.css">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231f4d3a'/%3E%3Ctext x='16' y='23' font-size='18' text-anchor='middle' fill='%23e8a33d'%3E%E2%8C%82%3C/text%3E%3C/svg%3E">
-<script type="module" src="main.js"></script>
 </head>
 <body>
-<main id="app"><p class="loading">Loading the household budget…</p></main>
-<noscript><p class="loading">Hearth Ledger needs JavaScript to add up your budget. Please enable it and reload.</p></noscript>
+<header class="site-head">
+  <span class="brand">Hearth Ledger <small>for the Rivera household · November 2026</small></span>
+  <nav class="site-nav" aria-label="Pages">
+    <a class="nav-link" href="#/">Dashboard</a>
+    <a class="nav-link" href="#/budget">Budget</a>
+    <a class="nav-link" href="#/transactions">Transactions</a>
+    <a class="nav-link" href="#/bills">Bills</a>
+    <a class="nav-link" href="#/goals">Goals</a>
+    <a class="nav-link" href="#/reports">Reports</a>
+    <a class="nav-link" href="#/calculators">Calculators</a>
+    <a class="nav-link" href="#/settings">Settings</a>
+  </nav>
+</header>
+<main id="app" class="wrap">
+  <p>Loading Hearth Ledger…</p>
+</main>
+<footer class="site-foot">
+  Hearth Ledger — a household budget site that runs entirely from its own files. No accounts, no network, no tracking. Demo figures for November 2026.
+</footer>
+<script type="module" src="app.js"></script>
 </body>
 </html>
