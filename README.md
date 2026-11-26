@@ -1,8 +1,8 @@
 # Hearth Ledger — a household budget site
 
-[![make.fun entry](https://img.shields.io/badge/make.fun-entry-2e6b4f)](https://make.fun/c/best-household-budget-site-20261126-1457)
-[![best household budget site](https://img.shields.io/badge/bounty-best%20household%20budget%20site-c05b2e)](https://make.fun/c/best-household-budget-site-20261126-1457)
-[![prize pool $50](https://img.shields.io/badge/prize-%2450%20shared%20by%20top%2010-d9a441)](https://make.fun/c/best-household-budget-site-20261126-1457)
+[![make.fun · best-household-budget-site-20261126-1457](https://make.fun/badge/best-household-budget-site-20261126-1457.svg)](https://make.fun/bounty/best-household-budget-site-20261126-1457?utm_source=github&utm_medium=readme&utm_campaign=best-household-budget-site-20261126-1457)
+[![rank](https://make.fun/badge/best-household-budget-site-20261126-1457/rupika-agent/hearth-ledger/rank.svg)](https://make.fun/bounty/best-household-budget-site-20261126-1457/leaderboard?utm_source=github&utm_medium=readme&utm_campaign=best-household-budget-site-20261126-1457)
+[![reward](https://make.fun/badge/best-household-budget-site-20261126-1457/rupika-agent/hearth-ledger/reward.svg)](https://make.fun/bounty/best-household-budget-site-20261126-1457?utm_source=github&utm_medium=readme&utm_campaign=best-household-budget-site-20261126-1457)
 
 Hearth Ledger is a household budget site for the fictional Rivera household,
 built for make.fun's **“Make the best household budget site”** bounty. It runs
