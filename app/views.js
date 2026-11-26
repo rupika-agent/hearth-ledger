@@ -1,6 +1,7 @@
-// Hearth Ledger — every page the household needs, as templates.
-// Each view is a function of the state: change the state, re-render, and
-// every figure on the page moves with it. Nothing here is a placeholder.
+// Hearth Ledger — the eight pages, as functions of the state.
+// Change the state, re-render, and every figure on the page moves with it.
+// Nothing on any page is a placeholder: every number is computed, and
+// every button and form does what it says.
 
 import {
   CATEGORIES, MONTH_LABEL, categoryOf, esc, fmtDate, money, money0,
@@ -46,6 +47,7 @@ function pageHead(title, sub) {
   return `<div class="page-head"><h1>${title}</h1><p>${sub}</p></div>`;
 }
 
+// One category's progress bar: spent against planned, with what is left.
 function catBar(cat, planned, spent) {
   const left = planned - spent;
   const p = planned ? Math.min(100, Math.round((spent / planned) * 100)) : 0;
@@ -367,9 +369,9 @@ export function viewReports(state, months) {
     .filter((x) => x.value > 0)
     .sort((a, b) => b.value - a.value);
   const hist = state.history.slice(-months);
-  const last = state.history[state.history.length - 2];
-  const prev = state.history[state.history.length - 1];
-  const change = last ? Math.round(((prev.spent - last.spent) / last.spent) * 100) : 0;
+  const october = state.history[state.history.length - 2];
+  const november = state.history[state.history.length - 1];
+  const change = october ? Math.round(((november.spent - october.spent) / october.spent) * 100) : 0;
   // Everyday spending only: rent, savings and debt are already paid for the
   // month, so the run-rate comes from the variable categories.
   const fixed = (byCat.housing || 0) + (byCat.savings || 0) + (byCat.debt || 0);
@@ -399,6 +401,23 @@ export function viewReports(state, months) {
     </div>
     <canvas id="trend" data-chart="trend" data-months="${months}" aria-label="Income versus spending trend"></canvas>
     <p class="muted">November is tracking ${change <= 0 ? `${Math.abs(change)}% under` : `${change}% over`} October's spending.</p>
+  </section>
+  <section class="card">
+    <h2>Plan vs spent — every category</h2>
+    <p class="muted">The whole plan in one table, biggest spend first. Nothing here is over budget this month.</p>
+    <table class="tx">
+      <thead><tr><th>Category</th><th class="num">Planned</th><th class="num">Spent</th><th class="num">Left</th><th class="num">Used</th></tr></thead>
+      <tbody>
+      ${[...CATEGORIES].map((c) => ({ c, planned: state.budgets[c.id] || 0, sp: byCat[c.id] || 0 }))
+        .sort((a, b) => b.sp - a.sp)
+        .map(({ c, planned, sp }) => {
+          const left = planned - sp;
+          const used = pct(sp, planned);
+          return `<tr><td>${esc(c.name)}</td><td class="num">${money(planned)}</td><td class="num">${money(sp)}</td><td class="num ${left < 0 ? 'bad' : ''}">${money(left)}</td><td class="num">${used}%</td></tr>`;
+        }).join('')}
+      </tbody>
+      <tfoot><tr><td><strong>Total</strong></td><td class="num"><strong>${money(totalBudgeted(state))}</strong></td><td class="num"><strong>${money(spent)}</strong></td><td class="num"><strong>${money(totalBudgeted(state) - spent)}</strong></td><td class="num"><strong>${pct(spent, totalBudgeted(state))}%</strong></td></tr></tfoot>
+    </table>
   </section>
   <div class="cols">
     <section class="card">

@@ -17,7 +17,7 @@ Hearth Ledger follows the Alvarez household through November 2026: $7,850 of inc
 - **Transactions** — the whole ledger: filter by category, search by merchant or note, add a transaction, delete one. The total shown updates with the filter.
 - **Bills** — every bill due this month with its due day; mark one paid and the totals move; add a bill.
 - **Goals** — four savings goals with progress bars; contribute to any goal and watch it fill; start a new goal.
-- **Reports** — spending by category as a donut or bar chart (canvas, no library), income vs spending over 3 or 6 months, written insights computed from the numbers, and a real CSV download of the month's transactions.
+- **Reports** — spending by category as a donut or bar chart (canvas, no library), income vs spending over 3 or 6 months, a plan-vs-spent table for every category, written insights computed from the numbers, and a real CSV download of the month's transactions.
 - **Calculators** — a 50 / 30 / 20 budget splitter, a debt payoff planner (with and without an extra payment), and an emergency fund target — all live as you type.
 - **Settings** — household name, members, payday and currency; download the data as JSON; reset to the demo figures.
 

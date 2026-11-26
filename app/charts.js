@@ -1,8 +1,9 @@
-// Hearth Ledger — charts drawn on canvas, no library, no network.
-// Each chart reads only the numbers it is handed, and sizes itself to the
-// element on the page (with device-pixel-ratio scaling so it stays sharp).
+// Hearth Ledger — charts on canvas, no library, no network.
+// A chart only ever draws the numbers it is handed, and it sizes itself to
+// the element on the page, scaling by the device pixel ratio so it stays
+// sharp on retina screens.
 
-function setupCanvas(canvas, heightCss) {
+function prepare(canvas, heightCss) {
   const dpr = window.devicePixelRatio || 1;
   const width = canvas.clientWidth;
   const height = heightCss;
@@ -14,9 +15,9 @@ function setupCanvas(canvas, heightCss) {
   return { ctx, width, height };
 }
 
-// A donut: slices of {label, value, color}, with the total in the middle.
+// Donut: one slice per {label, value, color}, the total in the middle.
 export function drawDonut(canvas, slices, centerLabel, centerValue) {
-  const { ctx, width, height } = setupCanvas(canvas, 220);
+  const { ctx, width, height } = prepare(canvas, 220);
   const cx = width / 2;
   const cy = height / 2;
   const outer = Math.min(width, height) / 2 - 12;
@@ -48,11 +49,11 @@ export function drawDonut(canvas, slices, centerLabel, centerValue) {
   ctx.fillText(centerValue, cx, cy + 20);
 }
 
-// Horizontal bars: rows of {label, value, color} with the value at the end.
+// Horizontal bars: one row per {label, value, color}, value at the end.
 export function drawBars(canvas, rows, money) {
   const rowH = 34;
   const height = rows.length * rowH + 8;
-  const { ctx, width } = setupCanvas(canvas, height);
+  const { ctx, width } = prepare(canvas, height);
   const labelW = 132;
   const valueW = 76;
   const barX = labelW + 8;
@@ -74,10 +75,10 @@ export function drawBars(canvas, rows, money) {
   });
 }
 
-// Grouped bars: two series (income, spent) across months.
+// Grouped bars: income beside spending, one pair per month.
 export function drawTrend(canvas, months, income, spent, money) {
   const height = 230;
-  const { ctx, width } = setupCanvas(canvas, height);
+  const { ctx, width } = prepare(canvas, height);
   const padL = 46;
   const padB = 28;
   const padT = 12;

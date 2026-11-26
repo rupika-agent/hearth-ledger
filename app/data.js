@@ -1,9 +1,9 @@
-// Hearth Ledger — household data and the little maths the pages need.
+// Hearth Ledger — the demo month, and the small helpers every page uses.
 //
-// Everything about the demo month lives here: the Alvarez household, the
-// income lines, the plan per category, 54 real transactions, the bills,
-// the savings goals and six months of history. The state is one object,
-// saved to localStorage under a single key; nothing is sent anywhere.
+// The Alvarez household's November 2026 lives here: income, the plan for
+// each category, 54 transactions, the bills, the savings goals and six
+// months of history. The whole state is one object, kept in localStorage
+// under one key. Nothing in this file ever leaves the browser.
 
 export const STORE_KEY = 'hearth-ledger-v1';
 export const MONTH_LABEL = 'November 2026';
@@ -131,8 +131,8 @@ export function seedState() {
   };
 }
 
-// Load the saved month, or fall back to the seed when storage is empty
-// or unreadable (private mode, a bad write, a first visit).
+// Read the saved month back; when storage is empty, unreadable or from an
+// older shape, start again from the seed figures above.
 export function loadState() {
   try {
     const raw = localStorage.getItem(STORE_KEY);
@@ -140,12 +140,12 @@ export function loadState() {
       const parsed = JSON.parse(raw);
       if (parsed && parsed.transactions && parsed.budgets) return parsed;
     }
-  } catch { /* corrupted storage: fall through to the seed */ }
+  } catch { /* bad storage: fall through to the seed */ }
   return seedState();
 }
 
 export function saveState(state) {
-  try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch { /* private mode: keep it in memory */ }
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch { /* private mode: memory only */ }
 }
 
 export function resetState() {
@@ -154,7 +154,8 @@ export function resetState() {
   return fresh;
 }
 
-// ---- figures every page reads: always computed from the state ----
+// ---- derived figures: recomputed from the state on every render, so no
+// page can ever disagree with another one about the same month ----
 
 export function totalIncome(state) {
   return state.income.reduce((sum, row) => sum + row.amount, 0);

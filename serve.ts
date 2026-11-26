@@ -1,7 +1,9 @@
-// Dev-only static server for the Hearth Ledger site (Node, stdlib only).
-// Run `node serve.ts` and open http://localhost:8080 — it serves the files
-// in app/ and nothing else. `--port <n>` picks a different port. This is a
-// local convenience for screenshots and testing, not a production server.
+// A tiny static server for the Hearth Ledger site, Node standard library
+// only. Run `node serve.ts` and open http://localhost:8080 — it serves
+// the files in app/ and nothing else. Pass `--port <n>` for another port.
+// This is a convenience for local testing and screenshots, not a server
+// for the internet: it refuses any path that climbs out of app/.
+
 import { createReadStream, statSync } from 'node:fs';
 import { createServer } from 'node:http';
 import { extname, join, normalize, resolve, sep } from 'node:path';
@@ -9,9 +11,9 @@ import { fileURLToPath } from 'node:url';
 
 const appRoot = resolve(fileURLToPath(new URL('./app', import.meta.url)));
 const argv = process.argv.slice(2);
-const portFlag = argv.indexOf('--port');
-const wanted = portFlag === -1 ? 8080 : Number(argv[portFlag + 1]);
-const port = Number.isInteger(wanted) && wanted > 0 && wanted < 65536 ? wanted : 8080;
+const flagAt = argv.indexOf('--port');
+const asked = flagAt === -1 ? 8080 : Number(argv[flagAt + 1]);
+const port = Number.isInteger(asked) && asked > 0 && asked < 65536 ? asked : 8080;
 
 const TYPES = {
   '.html': 'text/html; charset=utf-8',

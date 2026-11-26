@@ -1,7 +1,7 @@
-// Hearth Ledger — the router and the wiring.
-// Every control on every page is handled here: forms, buttons, sliders and
-// the charts, which are drawn after each render. window.__shotReady is
-// false while a page renders and true once it is on screen.
+// Hearth Ledger — the router and the wiring for every control.
+// Forms, buttons, sliders and charts are all handled here and drawn after
+// each render. window.__shotReady is false while a page is rendering and
+// true once it is on screen, so a screenshot knows when to fire.
 
 import {
   CATEGORIES, loadState, saveState, resetState, uid, money, spentByCategory,
@@ -20,8 +20,8 @@ let chartMode = 'donut';
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-// Simulate paying a balance down month by month: interest accrues, then the
-// payment lands. Returns how long it takes and what the interest costs.
+// Pay a balance down month by month: interest accrues first, then the
+// payment lands. Returns the months it takes and the interest it costs.
 function payoffMonths(balance, apr, payment) {
   const r = apr / 100 / 12;
   if (balance <= 0) return { months: 0, interest: 0 };
@@ -39,8 +39,8 @@ function payoffMonths(balance, apr, payment) {
   return { months, interest };
 }
 
+// A month name a given number of months after November 2026.
 function monthName(offset) {
-  // offset months after November 2026
   const base = 2026 * 12 + 10 + offset;
   return `${MONTHS[base % 12]} ${Math.floor(base / 12)}`;
 }
@@ -126,9 +126,9 @@ function drawCharts() {
   }
 }
 
+// The calculator cards only exist on the tools page; run whichever is there.
 function runCalculators() {
-  const incomeEl = document.getElementById('calc-income');
-  if (incomeEl) updateSplit();
+  if (document.getElementById('calc-income')) updateSplit();
   if (document.getElementById('debt-balance')) updateDebt();
   if (document.getElementById('fund-spend')) updateFund();
 }
@@ -315,7 +315,7 @@ document.addEventListener('click', (event) => {
   }
 });
 
-// ---- live inputs ----
+// ---- live inputs: calculators update as you type, budget edits on change ----
 
 document.addEventListener('input', (event) => {
   const el = event.target;
